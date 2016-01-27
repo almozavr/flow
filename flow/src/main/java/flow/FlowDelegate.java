@@ -3,6 +3,7 @@ package flow;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.view.View;
 
 import static flow.Preconditions.checkArgument;
 
@@ -136,9 +137,14 @@ public final class FlowDelegate {
     return flow.goBack();
   }
 
-  public void onSaveInstanceState(Bundle outState) {
+  public void onSaveInstanceState(Bundle outState, View container) {
     checkArgument(outState != null, "outState may not be null");
-    Parcelable parcelable = flow.getHistory().getParcelable(parceler, new History.Filter() {
+    History history = flow.getHistory();
+    // put current view state to history
+    ViewState currentViewState = history.currentViewState();
+    currentViewState.save(container);
+    // save history
+    Parcelable parcelable = history.getParcelable(parceler, new History.Filter() {
       @Override public boolean apply(Object state) {
         return !state.getClass().isAnnotationPresent(NotPersistent.class);
       }

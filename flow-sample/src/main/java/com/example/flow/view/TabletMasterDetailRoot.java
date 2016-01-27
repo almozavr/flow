@@ -40,7 +40,7 @@ public class TabletMasterDetailRoot extends LinearLayout implements HandlesBack,
   }
 
   @Override public ViewGroup getCurrentChild() {
-    Paths.MasterDetailPath showing = Path.get(getContext());
+    Paths.MasterDetailPath showing = Flow.get(getContext()).getHistory().top();
     return showing.isMaster() ? masterContainer.getCurrentChild()
         : detailContainer.getCurrentChild();
   }
