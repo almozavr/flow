@@ -207,22 +207,26 @@ public final class Flow {
    */
   public boolean goBack() {
     boolean canGoBack = history.size() > 1 || (pendingTraversal != null
-        && pendingTraversal.state != TraversalState.FINISHED);
+            && pendingTraversal.state != TraversalState.FINISHED);
+    if (!canGoBack) return false;
     move(new PendingTraversal() {
-      @Override protected void doExecute() {
-        if (history.size() == 1) {
-          // We are not calling the listener, so we must complete this noop transition ourselves.
-          onTraversalCompleted();
-        } else {
-          History.Builder builder = history.buildUpon();
-          builder.pop();
-          History newHistory = builder.build();
-          dispatch(newHistory, Direction.BACKWARD);
+      @Override void doExecute() {
+        if (history.size() <= 1) {
+          // The history shrank while this op was pending. It happens, let's
+          // no-op. See lengthy discussions:
+          // https://github.com/square/flow/issues/195
+          // https://github.com/square/flow/pull/197
+          return;
         }
+
+        History.Builder builder = history.buildUpon();
+        builder.pop();
+        final History newHistory = builder.build();
+        dispatch(newHistory, Direction.BACKWARD);
       }
     });
 
-    return canGoBack;
+    return true;
   }
 
   private void move(PendingTraversal pendingTraversal) {
